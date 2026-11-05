@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenPlay Vault - Free & Open Source Games</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0d1117; color: #c9d1d9; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Navbar */
+    header { background: #161b22; padding: 1.2rem 2rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #30363d; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 800; color: #58a6ff; text-transform: uppercase; letter-spacing: 1px; }
+    .search-box { display: flex; align-items: center; background: #0d1117; border-radius: 8px; padding: 6px 12px; border: 1px solid #30363d; width: 100%; max-width: 380px; }
+    .search-box input { background: transparent; border: none; outline: none; color: #fff; width: 100%; font-size: 0.95rem; }
+    .search-box i { color: #8b949e; }
+
+    /* Layout */
+    .container { max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem; flex: 1; width: 100%; }
+    .hero { text-align: center; margin-bottom: 2.5rem; }
+    .hero h1 { font-size: 2.2rem; color: #f0f6fc; margin-bottom: 8px; }
+    .hero p { color: #8b949e; font-size: 1.05rem; }
+
+    /* Filter Buttons */
+    .filter-tabs { display: flex; gap: 10px; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 6px; }
+    .tab-btn { background: #161b22; color: #8b949e; border: 1px solid #30363d; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; white-space: nowrap; transition: all 0.2s; }
+    .tab-btn.active, .tab-btn:hover { background: #238636; color: #fff; border-color: #2ea043; }
+
+    /* Game Cards Grid */
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .game-card { background: #161b22; border-radius: 12px; overflow: hidden; border: 1px solid #30363d; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; }
+    .game-card:hover { transform: translateY(-5px); border-color: #58a6ff; }
+    .game-card img { width: 100%; height: 160px; object-fit: cover; background: #21262d; }
+    
+    .card-body { padding: 1.2rem; display: flex; flex-direction: column; flex: 1; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .card-title { font-size: 1.15rem; font-weight: 700; color: #f0f6fc; }
+    .license-badge { background: #1f6feb26; color: #58a6ff; border: 1px solid #1f6feb; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: bold; }
+    .card-desc { font-size: 0.88rem; color: #8b949e; line-height: 1.4; margin-bottom: 1rem; flex: 1; }
+    
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.2rem; }
+    .tag { background: #21262d; color: #c9d1d9; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; }
+
+    .card-footer { display: flex; gap: 8px; }
+    .btn-download { flex: 1; background: #238636; color: #fff; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-download:hover { background: #2ea043; }
+    .btn-info { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 10px 14px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    .btn-info:hover { background: #30363d; color: #fff; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; max-width: 600px; width: 100%; padding: 1.5rem; position: relative; }
+    .modal-close { position: absolute; top: 14px; right: 18px; font-size: 1.4rem; color: #8b949e; cursor: pointer; }
+    .modal-close:hover { color: #fff; }
+    .modal-title { font-size: 1.3rem; color: #f0f6fc; margin-bottom: 1rem; }
+    .spec-group { background: #0d1117; padding: 1rem; border-radius: 8px; border: 1px solid #30363d; margin-top: 10px; font-size: 0.9rem; line-height: 1.6; }
+    
+    footer { text-align: center; padding: 1.5rem; color: #8b949e; font-size: 0.85rem; border-top: 1px solid #30363d; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-gamepad"></i> OpenPlay Vault
+    </div>
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" placeholder="Search open-source games..." onkeyup="filterGames()">
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="hero">
+      <h1>Free & Open Source Games Directory</h1>
+      <p>Direct download links to community projects, indie freeware & open-engine remakes.</p>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="filter-tabs">
+      <button class="tab-btn active" onclick="setCategory('all', this)">All Games</button>
+      <button class="tab-btn" onclick="setCategory('Strategy', this)">Strategy / RTS</button>
+      <button class="tab-btn" onclick="setCategory('Action', this)">Shooter & Action</button>
+      <button class="tab-btn" onclick="setCategory('Racing', this)">Racing / Arcade</button>
+      <button class="tab-btn" onclick="setCategory('Sandbox', this)">Sandbox / RPG</button>
+    </div>
+
+    <!-- Game Card Grid -->
+    <div class="game-grid" id="gameGrid"></div>
+  </div>
+
+  <!-- Detail Specs Modal -->
+  <div class="modal" id="infoModal">
+    <div class="modal-box">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <h2 class="modal-title" id="mTitle">Game Details</h2>
+      <p id="mDesc" style="color: #8b949e; font-size: 0.95rem; margin-bottom: 12px;"></p>
+      <div class="spec-group" id="mSpecs"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>OpenPlay Vault — 100% Legal & Open Source Game Catalog. Hosted on GitHub Pages.</p>
+  </footer>
+
+  <script>
+    // Verified Open Source & Freeware Games Dataset
+    const games = [
+      {
+        id: 1,
+        title: "0 A.D.",
+        category: "Strategy",
+        license: "GPL v2+",
+        size: "1.4 GB",
+        platform: "Windows / Linux / macOS",
+        image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&auto=format&fit=crop&q=80",
+        desc: "A free, open-source historical real-time strategy (RTS) game illustrating ancient warfare.",
+        specs: "OS: Windows 7/10/11 | RAM: 2 GB | GPU: 512 MB VRAM | Storage: 3 GB free",
+        downloadUrl: "https://play0ad.com/download/"
+      },
+      {
+        id: 2,
+        title: "OpenRA (Red Alert)",
+        category: "Strategy",
+        license: "GPL v3",
+        size: "80 MB",
+        platform: "Windows / Linux / macOS",
+        image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop&q=80",
+        desc: "Open-source game engine rebuild of classic Command & Conquer and Red Alert strategy titles.",
+        specs: "OS: Windows 10/11 | RAM: 1 GB | GPU: Any OpenGL 2.0 compatible | Storage: 500 MB",
+        downloadUrl: "https://www.openra.net/download/"
+      },
+      {
+        id: 3,
+        title: "SuperTuxKart",
+        category: "Racing",
+        license: "GPL v3",
+        size: "700 MB",
+        platform: "Windows / Linux / Android",
+        image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
+        desc: "A 3D open-source arcade kart racing game with varied characters, tracks, and local/online multiplayer.",
+        specs: "OS: Windows 8/10/11 | RAM: 2 GB | GPU: Intel HD 4000 or better | Storage: 1.5 GB",
+        downloadUrl: "https://supertuxkart.net/Download"
+      },
+      {
+        id: 4,
+        title: "Xonotic",
+        category: "Action",
+        license: "GPL v3",
+        size: "950 MB",
+        platform: "Windows / Linux / macOS",
+        image: "https://images.unsplash.com/photo-1552824722-ddab1374e622?w=600&auto=format&fit=crop&q=80",
+        desc: "An addictive, arena-style fast-paced first-person shooter (FPS) with slick movement and high-tech weapons.",
+        specs: "OS: Windows 10/11 | RAM: 2 GB | GPU: 1 GB VRAM Dedicated | Storage: 2 GB",
+        downloadUrl: "https://xonotic.org/download/"
+      },
+      {
+        id: 5,
+        title: "Minetest (Luanti)",
+        category: "Sandbox",
+        license: "LGPL 2.1",
+        size: "50 MB",
+        platform: "Windows / Linux / Android",
+        image: "https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=600&auto=format&fit=crop&q=80",
+        desc: "An infinite-world block sandbox game engine with modding API, survival, and multiplayer crafting.",
+        specs: "OS: Windows 7/10/11 | RAM: 1 GB | GPU: Any DirectX 9 / OpenGL | Storage: 300 MB",
+        downloadUrl: "https://www.minetest.net/downloads/"
+      },
+      {
+        id: 6,
+        title: "Veloren",
+        category: "Sandbox",
+        license: "GPL v3",
+        size: "300 MB",
+        platform: "Windows / Linux / macOS",
+        image: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&auto=format&fit=crop&q=80",
+        desc: "Multiplayer voxel action RPG inspired by Cube World and Breath of the Wild, built in Rust.",
+        specs: "OS: Windows 10/11 (64-bit) | RAM: 4 GB | GPU: Dedicated GPU recommended | Storage: 2 GB",
+        downloadUrl: "https://veloren.net/download/"
+      }
+    ];
+
+    let activeCategory = 'all';
+    const grid = document.getElementById('gameGrid');
+    const modal = document.getElementById('infoModal');
+
+    function renderGames(list) {
+      grid.innerHTML = '';
+      if(list.length === 0) {
+        grid.innerHTML = '<p style="color:#8b949e; grid-column: 1/-1; text-align:center;">No games match your search.</p>';
+        return;
+      }
+
+      list.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.innerHTML = `
+          <img src="${game.image}" alt="${game.title}" loading="lazy">
+          <div class="card-body">
+            <div class="card-header">
+              <span class="card-title">${game.title}</span>
+              <span class="license-badge">${game.license}</span>
+            </div>
+            <p class="card-desc">${game.desc}</p>
+            <div class="card-tags">
+              <span class="tag"><i class="fa-solid fa-folder"></i> ${game.category}</span>
+              <span class="tag"><i class="fa-solid fa-hard-drive"></i> ${game.size}</span>
+              <span class="tag"><i class="fa-solid fa-desktop"></i> ${game.platform}</span>
+            </div>
+            <div class="card-footer">
+              <a href="${game.downloadUrl}" target="_blank" rel="noopener noreferrer" class="btn-download">
+                <i class="fa-solid fa-download"></i> Official Get
+              </a>
+              <button class="btn-info" onclick="openDetails(${game.id})" title="System Specs">
+                <i class="fa-solid fa-circle-info"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setCategory(cat, element) {
+      activeCategory = cat;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      filterGames();
+    }
+
+    function filterGames() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const filtered = games.filter(g => {
+        const matchesCategory = activeCategory === 'all' || g.category === activeCategory;
+        const matchesQuery = g.title.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q);
+        return matchesCategory && matchesQuery;
+      });
+      renderGames(filtered);
+    }
+
+    function openDetails(id) {
+      const g = games.find(item => item.id === id);
+      if(!g) return;
+      document.getElementById('mTitle').innerText = `${g.title} (${g.platform})`;
+      document.getElementById('mDesc').innerText = g.desc;
+      document.getElementById('mSpecs').innerHTML = `
+        <strong>License:</strong> ${g.license}<br>
+        <strong>File Size:</strong> ${g.size}<br>
+        <strong>System Requirements:</strong> ${g.specs}
+      `;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() { modal.style.display = 'none'; }
+    window.onclick = function(e) { if(e.target === modal) closeModal(); }
+
+    renderGames(games);
+  </script>
+</body>
+</html>
